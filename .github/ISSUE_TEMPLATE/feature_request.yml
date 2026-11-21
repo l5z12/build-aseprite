@@ -1,0 +1,16 @@
+name: Feature request
+description: Suggest an improvement to the build script
+labels: [enhancement]
+body:
+  - type: textarea
+    id: request
+    attributes:
+      label: What would you like?
+      description: The problem or use case, and the change you'd like.
+    validations:
+      required: true
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives
+      description: Workarounds or other approaches you've considered.

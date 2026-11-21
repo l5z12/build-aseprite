@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Aseprite bugs and feature requests
+    url: https://github.com/aseprite/aseprite/issues
+    about: Problems with Aseprite itself belong in the official tracker.
+  - name: Prebuilt Aseprite
+    url: https://www.aseprite.org/
+    about: This project can't share builds. Official builds are available from aseprite.org.

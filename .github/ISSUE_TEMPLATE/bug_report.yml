@@ -1,0 +1,41 @@
+name: Bug report
+description: The build script fails or does something wrong
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Problems with Aseprite itself belong in the [Aseprite issue tracker](https://github.com/aseprite/aseprite/issues).
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened?
+      description: What you expected, and what happened instead.
+    validations:
+      required: true
+  - type: input
+    id: command
+    attributes:
+      label: Command
+      placeholder: .\build-aseprite.ps1 -Installer
+    validations:
+      required: true
+  - type: textarea
+    id: output
+    attributes:
+      label: Error output
+      description: The end of the output, from the `FAILED` line.
+      render: text
+    validations:
+      required: true
+  - type: textarea
+    id: prerequisites
+    attributes:
+      label: Prerequisites
+      description: The "Checking prerequisites" section of the output.
+      render: text
+  - type: textarea
+    id: log
+    attributes:
+      label: Log file
+      description: Attach the log from the `logs` folder. Don't attach Aseprite binaries or installers.
