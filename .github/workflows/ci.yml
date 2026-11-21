@@ -1,0 +1,69 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  lint:
+    name: Lint and smoke test
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Parse with PowerShell 7
+        shell: pwsh
+        run: |
+          $errors = $null
+          foreach ($file in 'build-aseprite.ps1', '.github/scripts/Update-ReadmeOptions.ps1') {
+            [void][System.Management.Automation.Language.Parser]::ParseFile((Resolve-Path $file), [ref]$null, [ref]$errors)
+            foreach ($e in $errors) { Write-Output "::error file=$file,line=$($e.Extent.StartLineNumber)::$($e.Message)" }
+            if ($errors) { exit 1 }
+          }
+
+      - name: Parse with Windows PowerShell 5.1
+        shell: powershell
+        run: |
+          $errors = $null
+          foreach ($file in 'build-aseprite.ps1', '.github/scripts/Update-ReadmeOptions.ps1') {
+            [void][System.Management.Automation.Language.Parser]::ParseFile((Resolve-Path $file), [ref]$null, [ref]$errors)
+            foreach ($e in $errors) { Write-Output "::error file=$file,line=$($e.Extent.StartLineNumber)::$($e.Message)" }
+            if ($errors) { exit 1 }
+          }
+
+      - name: PSScriptAnalyzer
+        shell: pwsh
+        run: |
+          Install-Module PSScriptAnalyzer -Scope CurrentUser -Force
+          $results = @(foreach ($path in 'build-aseprite.ps1', '.github/scripts') {
+            Invoke-ScriptAnalyzer -Path $path -Recurse -Settings .github/PSScriptAnalyzerSettings.psd1
+          })
+          foreach ($r in $results) {
+            $level = if ($r.Severity -eq 'Error') { 'error' } else { 'warning' }
+            $file = [IO.Path]::GetRelativePath($PWD, $r.ScriptPath) -replace '\\', '/'
+            Write-Output "::$level file=$file,line=$($r.Line)::$($r.RuleName): $($r.Message)"
+          }
+          if ($results.Count -gt 0) { exit 1 }
+
+      - name: Help
+        shell: pwsh
+        run: |
+          $help = Get-Help ./build-aseprite.ps1 -Full
+          $missing = @($help.parameters.parameter | Where-Object { -not $_.description })
+          if (-not $help.description -or $missing.Count -gt 0) {
+            Write-Output "::error file=build-aseprite.ps1::Comment-based help is missing or incomplete"
+            exit 1
+          }
+
+      - name: List versions (PowerShell 7)
+        shell: pwsh
+        run: ./build-aseprite.ps1 -ListVersions
+
+      - name: List versions (Windows PowerShell 5.1)
+        shell: powershell
+        run: ./build-aseprite.ps1 -ListVersions
