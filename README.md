@@ -63,3 +63,7 @@ Run it again to update. Only what changed is downloaded and recompiled.
 - Compiler out of memory: use `-Jobs 4`.
 - Errors after updating Visual Studio: use `-Clean`.
 - Use a short work folder path, such as `C:\asebuild`.
+
+## License
+
+This script is [MIT licensed](LICENSE). Aseprite itself is covered by its own [EULA](https://github.com/aseprite/aseprite/blob/main/EULA.txt).
