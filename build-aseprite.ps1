@@ -191,30 +191,30 @@ $script:NinjaNoise = '^(Microsoft \(R\) Macro Assembler|Copyright \(C\) Microsof
 # Output and logging
 # --------------------------------------------------------------------------
 
-function Write-Log([string]$Text) {
+function Write-BuildLog([string]$Text) {
     if ($script:LogWriter) { $script:LogWriter.WriteLine($Text) }
 }
 
 function Write-Step([string]$Text) {
     Write-Host ''
     Write-Host "==> $Text" -ForegroundColor Cyan
-    Write-Log ''
-    Write-Log "==> $Text  [$(Get-Date -Format 'HH:mm:ss')]"
+    Write-BuildLog ''
+    Write-BuildLog "==> $Text  [$(Get-Date -Format 'HH:mm:ss')]"
 }
 
 function Write-Info([string]$Text) {
     Write-Host "    $Text"
-    Write-Log "    $Text"
+    Write-BuildLog "    $Text"
 }
 
 function Write-Detail([string]$Text) {
     Write-Host "    $Text" -ForegroundColor DarkGray
-    Write-Log "    $Text"
+    Write-BuildLog "    $Text"
 }
 
 function Write-Warn([string]$Text) {
     Write-Host "    WARNING: $Text" -ForegroundColor Yellow
-    Write-Log "    WARNING: $Text"
+    Write-BuildLog "    WARNING: $Text"
 }
 
 function Stop-Build {
@@ -251,9 +251,9 @@ function Initialize-Log([string]$Root) {
     $script:LogPath = Join-Path $logDir ('build-{0}.log' -f (Get-Date -Format 'yyyyMMdd-HHmmss'))
     $script:LogWriter = New-Object System.IO.StreamWriter($script:LogPath, $false, (New-Object System.Text.UTF8Encoding($false)))
     $script:LogWriter.AutoFlush = $true
-    Write-Log "build-aseprite.ps1 v$ScriptVersion  $(Get-Date -Format 'yyyy-MM-dd HH:mm:ss')"
-    Write-Log "PowerShell $($PSVersionTable.PSVersion)  OS $([Environment]::OSVersion.VersionString)"
-    Write-Log "Command line: $script:CommandLine"
+    Write-BuildLog "build-aseprite.ps1 v$ScriptVersion  $(Get-Date -Format 'yyyy-MM-dd HH:mm:ss')"
+    Write-BuildLog "PowerShell $($PSVersionTable.PSVersion)  OS $([Environment]::OSVersion.VersionString)"
+    Write-BuildLog "Command line: $script:CommandLine"
 }
 
 # --------------------------------------------------------------------------
@@ -321,7 +321,7 @@ function Invoke-Native {
     if ($ShowBuildOutput) { $Display = 'Show' }
     if (-not $Activity) { $Activity = [IO.Path]::GetFileNameWithoutExtension($FilePath) }
 
-    Write-Log ("> `"{0}`" {1}" -f $FilePath, ($ArgumentList -join ' '))
+    Write-BuildLog ("> `"{0}`" {1}" -f $FilePath, ($ArgumentList -join ' '))
     $script:LastLines.Clear()
     $state = @{ Last = [DateTime]::MinValue }
     $oldEap = $ErrorActionPreference
@@ -329,7 +329,7 @@ function Invoke-Native {
     try {
         & $FilePath @ArgumentList 2>&1 | ForEach-Object {
             $line = $_.ToString()
-            Write-Log $line
+            Write-BuildLog $line
             $script:LastLines.Add($line)
             if ($script:LastLines.Count -gt 600) { $script:LastLines.RemoveAt(0) }
             switch ($Display) {
@@ -368,7 +368,7 @@ function Invoke-Native {
         Write-Progress -Id 1 -Activity $Activity -Completed
     }
     if ($null -eq $code) { $code = 0 }
-    Write-Log "< exit code $code"
+    Write-BuildLog "< exit code $code"
     if ($AllowFailure) { return $code }
     if ($OkExitCodes -notcontains $code) {
         $lines = $script:LastLines.ToArray()
@@ -418,7 +418,7 @@ function Save-Download([string]$Url, [string]$Destination) {
     $part = "$Destination.part"
     Remove-Item -LiteralPath $part -Force -ErrorAction SilentlyContinue
     Write-Info "Downloading $Url"
-    Write-Log "download $Url -> $Destination"
+    Write-BuildLog "download $Url -> $Destination"
 
     $ok = $false
     $curl = Join-Path $env:SystemRoot 'System32\curl.exe'
@@ -567,7 +567,7 @@ function Import-VsEnvironment($Vs) {
     $lines = @($out)
     $idx = [Array]::IndexOf($lines, $marker)
     if ($idx -lt 0) {
-        $lines | ForEach-Object { Write-Log $_ }
+        $lines | ForEach-Object { Write-BuildLog $_ }
         Stop-Build "Could not load the Visual Studio environment ($($Vs.VcVars) $vcArg)."
     }
     foreach ($line in $lines[($idx + 1)..($lines.Count - 1)]) {
@@ -662,7 +662,7 @@ function Get-RemoteRefs {
                 foreach ($r in $releases) { $tags[[string]$r.tag_name] = $null }
             }
         } catch {
-            Write-Log "GitHub API error: $($_.Exception.Message)"
+            Write-BuildLog "GitHub API error: $($_.Exception.Message)"
         }
     }
     if ($tags.Count -eq 0) {
@@ -1196,12 +1196,12 @@ function Invoke-AsepriteInstaller([string]$Setup, [switch]$Silent) {
     $log = Join-Path (Split-Path -Parent $Setup) 'install.log'
     $setupArgs = @("/LOG=`"$log`"")
     if ($Silent) { $setupArgs = @('/VERYSILENT', '/SUPPRESSMSGBOXES', '/NORESTART', '/CLOSEAPPLICATIONS') + $setupArgs }
-    Write-Log "run installer: $Setup $($setupArgs -join ' ')"
+    Write-BuildLog "run installer: $Setup $($setupArgs -join ' ')"
     $p = Start-Process -FilePath $Setup -ArgumentList $setupArgs -PassThru
     $null = $p.Handle
     $p.WaitForExit()
     $code = $p.ExitCode
-    Write-Log "installer exit code $code"
+    Write-BuildLog "installer exit code $code"
     switch ($code) {
         0 { return }
         8 { Write-Warn 'Setup finished but Windows needs a restart to complete it.'; return }
@@ -1286,18 +1286,18 @@ function Show-Versions([string]$InstallPath) {
     Write-Host ''
     $found = @()
     $setupInst = Get-SetupInstall
-    if ($setupInst) { $found += [pscustomobject]@{ Label = "Installed (for $($setupInst.Scope))"; Path = $setupInst.Location; Info = (Read-InstallInfo $setupInst.Location) } }
+    if ($setupInst) { $found += [pscustomobject]@{ Label = 'Installed'; Path = "$($setupInst.Location) (for $($setupInst.Scope))"; Info = (Read-InstallInfo $setupInst.Location) } }
     $portableInfo = Read-InstallInfo $InstallPath
     if ($portableInfo) { $found += [pscustomobject]@{ Label = 'Portable copy'; Path = $InstallPath; Info = $portableInfo } }
     if ($found.Count -eq 0) { Write-Host "Installed:          nothing (no setup install, no portable copy at $InstallPath)" }
     foreach ($f in $found) {
-        $line = $f.Label + ':'
+        $line = '{0,-20}' -f ($f.Label + ':')
         if ($f.Info) {
             $sha = [string]$f.Info.commit
             if ($sha.Length -gt 10) { $sha = $sha.Substring(0, 10) }
-            Write-Host ('{0,-20}{1} ({2} {3}, commit {4}, built {5})' -f $line, $f.Info.version, $f.Info.buildType, $f.Info.arch, $sha, $f.Info.builtAt)
+            Write-Host ('{0}{1} ({2} {3}, commit {4}, built {5})' -f $line, $f.Info.version, $f.Info.buildType, $f.Info.arch, $sha, $f.Info.builtAt)
         } else {
-            Write-Host ('{0,-20}{1}' -f $line, $setupInst.Version)
+            Write-Host ('{0}{1}' -f $line, $setupInst.Version)
         }
         Write-Host "                    $($f.Path)"
         if ($f.Info -and $f.Info.refKind -eq 'tag' -and $stable.Count -gt 0) {
@@ -1322,6 +1322,7 @@ function Invoke-Main {
     }
 
     $root = $WorkDir
+    if (-not $root) { $root = $PSScriptRoot }
     if (-not $root) { $root = (Get-Location).Path }
     $script:WorkRoot = Resolve-FullPath $root
     $src = if ($SourceDir) { Resolve-FullPath $SourceDir } else { Join-Path $script:WorkRoot 'src' }
@@ -1686,7 +1687,7 @@ function Invoke-Main {
     Write-Host ''
     Write-Host '  For your personal use only: the Aseprite EULA forbids sharing these binaries,' -ForegroundColor DarkGray
     Write-Host '  and that includes the installer.' -ForegroundColor DarkGray
-    Write-Log "SUCCESS in $(Format-Duration $total.Elapsed)"
+    Write-BuildLog "SUCCESS in $(Format-Duration $total.Elapsed)"
 
     if ($Run) { Start-Process -FilePath $finalExe -WorkingDirectory (Split-Path -Parent $finalExe) }
 }
@@ -1700,8 +1701,8 @@ try {
     Write-Host ''
     Write-Host "FAILED: $($_.Exception.Message)" -ForegroundColor Red
     foreach ($h in @($script:FailHints)) { if ($h) { Write-Host "  - $h" -ForegroundColor Yellow } }
-    Write-Log "FAILED: $($_.Exception.Message)"
-    Write-Log ($_.ScriptStackTrace)
+    Write-BuildLog "FAILED: $($_.Exception.Message)"
+    Write-BuildLog ($_.ScriptStackTrace)
     if ($script:LogPath) { Write-Host "  Full log: $script:LogPath" -ForegroundColor DarkGray }
 } finally {
     if ($script:LogWriter) { $script:LogWriter.Dispose(); $script:LogWriter = $null }
