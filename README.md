@@ -30,32 +30,36 @@ Run it again to update. Only what changed is downloaded and recompiled.
 
 ## Options
 
+<!-- options:start -->
 | Option | Description |
 |---|---|
-| `-Version` | `latest` (default), `latest-beta`, a tag (`v1.3.14`), a branch (`main`, `beta`), a commit, or `local` |
-| `-BuildType` | `Release` (default), `RelWithDebInfo`, `Debug` |
-| `-Arch` | `x64` (default) or `x86` |
-| `-SourceMode` | `Git` (default) or `Zip` (release source zip, no Git needed) |
-| `-WorkDir`, `-SourceDir`, `-InstallDir` | Where files go |
-| `-SkiaDir` | Use your own Skia build |
-| `-VsVersion` | Pick a Visual Studio version |
-| `-Jobs` | Limit parallel compiles |
-| `-Translations` | Include translations |
-| `-Portable` | Keep the portable copy's settings next to its exe |
-| `-NoUpdateCheck` | Disable the update check and news |
-| `-Tests` | Build and run unit tests |
-| `-CMakeArgs` | Extra CMake arguments |
-| `-Clean` | Full rebuild |
-| `-NoInstall` | Skip the portable copy |
-| `-Installer` | Build an installer in `dist\` |
-| `-RunInstaller`, `-SilentInstall` | Build the installer and run it |
-| `-InstallPrereqs` | Install missing tools |
-| `-FullHistory` | Full git history |
-| `-Force` | Discard local source changes |
-| `-ShowBuildOutput` | Show all build output |
-| `-Run` | Launch Aseprite when done |
-
-`Get-Help .\build-aseprite.ps1 -Full` describes each option.
+| `-Version` | latest (default), latest-beta, a tag such as v1.3.14, a branch (main, beta), a commit SHA, or local to build `-SourceDir` as-is. |
+| `-BuildType` | Release (default), RelWithDebInfo (includes a .pdb) or Debug. |
+| `-Arch` | x64 (default) or x86. |
+| `-SourceMode` | Git (default) or Zip (official release source zip; tags only, no Git needed). |
+| `-WorkDir` | Folder for source, dependencies, build files and logs. Default: script folder. |
+| `-SourceDir` | Git checkout location. Default: `<WorkDir>\src`. |
+| `-InstallDir` | Portable copy location. Default: `<WorkDir>\Aseprite`. With `-Installer`, a portable copy is only made when this is given. |
+| `-SkiaDir` | Use an existing Skia build instead of downloading one. |
+| `-VsVersion` | Visual Studio to use: latest (default), 2019, 2022, 2026 or a major version. |
+| `-Jobs` | Parallel compile jobs (default: automatic). Lower it if the compiler runs out of memory. |
+| `-Translations` | Include community translations. |
+| `-Portable` | Store the portable copy's settings next to its exe instead of `%APPDATA%\Aseprite`. |
+| `-NoUpdateCheck` | Disable the update check and the news on the Home tab. |
+| `-Tests` | Also build and run the unit tests. |
+| `-CMakeArgs` | Extra CMake arguments, e.g. `-CMakeArgs '-DENABLE_PSD=ON'`. |
+| `-Clean` | Full rebuild. |
+| `-NoInstall` | Don't make the portable copy. |
+| `-Installer` | Build an installer in `dist\` with shortcuts, optional file associations and an uninstaller. Requires Inno Setup 6.3 or newer. |
+| `-RunInstaller` | Build the installer and launch it. |
+| `-SilentInstall` | Build the installer and run it unattended, keeping earlier install options. |
+| `-InstallPrereqs` | Install missing tools with winget (Git, CMake, Ninja, Visual Studio Build Tools, and Inno Setup when needed). |
+| `-FullHistory` | Fetch full git history instead of a shallow checkout. |
+| `-Force` | Discard local source changes; allow a portable folder the script didn't create. |
+| `-Run` | Launch Aseprite when done. |
+| `-ShowBuildOutput` | Show all tool output instead of progress bars. |
+| `-ListVersions` | Show available and installed versions, then exit. |
+<!-- options:end -->
 
 ## Troubleshooting
 
